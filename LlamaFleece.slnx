@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LlamaFleece.PerfHarness/LlamaFleece.PerfHarness.csproj" />
+  <Project Path="LlamaFleece.Tests/LlamaFleece.Tests.csproj" />
+  <Project Path="LlamaFleece/LlamaFleece.csproj" />
+</Solution>

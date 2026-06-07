@@ -1,0 +1,17 @@
+{
+  "model": "Qwen/Qwen3.6-27B:coding",
+  "instructions": "You are a helpful assistant. Please think step by step.",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Write a short 3-sentence story about a brave compiler."
+        }
+      ]
+    }
+  ],
+  "stream": true
+}

@@ -1,0 +1,178 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-tag:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Validate SemVer tag and project version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+)(?:-(?<prerelease>[0-9A-Za-z][0-9A-Za-z.-]*))?$') {
+            throw "Release tag '$tag' must match vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-prerelease."
+          }
+
+          $tagVersion = $Matches.version
+          [xml]$project = Get-Content (Join-Path $PWD 'LlamaFleece/LlamaFleece.csproj')
+          $versionPrefix = $project.Project.PropertyGroup.VersionPrefix | Select-Object -First 1
+
+          if ([string]::IsNullOrWhiteSpace($versionPrefix)) {
+            throw 'LlamaFleece.csproj is missing VersionPrefix.'
+          }
+
+          if ($tagVersion -ne $versionPrefix) {
+            throw "Tag version '$tagVersion' does not match VersionPrefix '$versionPrefix' in LlamaFleece.csproj."
+          }
+
+      - name: Restore test project dependencies
+        run: dotnet restore .\LlamaFleece.Tests\LlamaFleece.Tests.csproj
+
+      - name: Build app in Release
+        run: dotnet build .\LlamaFleece\LlamaFleece.csproj --configuration Release --no-restore
+
+      - name: Run full test suite in Release
+        run: dotnet test .\LlamaFleece.Tests\LlamaFleece.Tests.csproj --configuration Release --no-restore
+
+  build-release-artifacts:
+    needs: validate-tag
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            asset_suffix: win-x64
+            archive_extension: zip
+          - os: ubuntu-latest
+            rid: linux-x64
+            asset_suffix: linux-x64
+            archive_extension: tar.gz
+          - os: macos-13
+            rid: osx-x64
+            asset_suffix: macos-x64
+            archive_extension: tar.gz
+          - os: macos-14
+            rid: osx-arm64
+            asset_suffix: macos-arm64
+            archive_extension: tar.gz
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish self-contained release artifact
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          $runtimeId = "${{ matrix.rid }}"
+          $assetSuffix = "${{ matrix.asset_suffix }}"
+          $archiveExtension = "${{ matrix.archive_extension }}"
+          $projectPath = Join-Path $PWD 'LlamaFleece/LlamaFleece.csproj'
+          $publishDir = Join-Path $PWD "artifacts/publish/$runtimeId"
+          $releaseDir = Join-Path $PWD 'artifacts/release'
+          $stagingRoot = Join-Path $PWD 'artifacts/staging'
+          $stagingDir = Join-Path $stagingRoot "LlamaFleece-$version-$assetSuffix"
+          $archivePath = Join-Path $releaseDir "LlamaFleece-$version-$assetSuffix.$archiveExtension"
+
+          New-Item -ItemType Directory -Force -Path $publishDir, $releaseDir, $stagingDir | Out-Null
+
+          dotnet publish $projectPath `
+            --configuration Release `
+            --runtime $runtimeId `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
+            -o $publishDir
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          Copy-Item (Join-Path $publishDir '*') -Destination $stagingDir -Recurse -Force
+          Copy-Item (Join-Path $PWD 'README.md') -Destination $stagingDir -Force
+          Copy-Item (Join-Path $PWD 'LICENSE') -Destination $stagingDir -Force
+          Copy-Item (Join-Path $PWD 'appsettings.example.json') -Destination $stagingDir -Force
+          Copy-Item (Join-Path $PWD 'docs') -Destination $stagingDir -Recurse -Force
+
+          if (Test-Path $archivePath) {
+            Remove-Item $archivePath -Force
+          }
+
+          if ($archiveExtension -eq 'zip') {
+            Compress-Archive -Path $stagingDir -DestinationPath $archivePath -CompressionLevel Optimal
+          }
+          else {
+            tar -czf $archivePath -C $stagingRoot (Split-Path $stagingDir -Leaf)
+
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.asset_suffix }}
+          path: artifacts/release/LlamaFleece-${{ github.ref_name }}-${{ matrix.asset_suffix }}.${{ matrix.archive_extension }}
+          if-no-files-found: error
+          compression-level: 0
+
+  create-release:
+    needs:
+      - validate-tag
+      - build-release-artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release archives
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: release-*
+          merge-multiple: true
+
+      - name: Generate SHA256 sums
+        working-directory: release-assets
+        run: sha256sum * > SHA256SUMS.txt
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/*

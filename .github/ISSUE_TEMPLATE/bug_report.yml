@@ -1,0 +1,90 @@
+name: Bug report
+description: Report a reproducible problem in LlamaFleece
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please include enough detail for someone else to reproduce it locally.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I can reproduce this on the current code in this repository.
+          required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Proxying and forwarding
+        - Streaming parser or projector
+        - TUI rendering or keyboard input
+        - Replay, export, or persistence
+        - Documentation or developer workflow
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint or provider
+      description: For example `/v1/chat/completions`, `/v1/responses`, `/v1/messages`, Ollama, OpenAI-compatible, Anthropic, or N/A.
+      placeholder: /v1/chat/completions
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem in one or two paragraphs.
+      placeholder: LlamaFleece accepts the request, but the streamed output pane never updates after the first chunk.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include sample commands, payloads, and the exact sequence you used.
+      placeholder: |
+        1. Set `Proxy__UpstreamUrl` to ...
+        2. Run `dotnet run --project .\LlamaFleece`
+        3. Run `.\eng\test.ps1`
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, terminal, .NET SDK version, and upstream server details if relevant.
+      placeholder: |
+        OS: Windows 11
+        Terminal: Windows Terminal / PowerShell 7
+        .NET SDK: 10.0.x
+        Upstream: Ollama 0.x
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Logs, screenshots, or additional context
+      description: Paste diagnostics, stack traces, or terminal captures here.
+      render: shell

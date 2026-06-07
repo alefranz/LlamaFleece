@@ -1,0 +1,8 @@
+{
+  "model": "Qwen/Qwen3.6-27B:coding",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant. Please think step by step."},
+    {"role": "user", "content": "Write a short 3-sentence story about a brave compiler."}
+  ],
+  "stream": true
+}

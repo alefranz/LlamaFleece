@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <Authors>LlamaFleece contributors</Authors>
+    <Company>LlamaFleece contributors</Company>
+    <Product>LlamaFleece</Product>
+    <Description>Local reverse proxy for LLM traffic with a live terminal UI for observability and debugging.</Description>
+    <PackageId>LlamaFleece</PackageId>
+    <PackageTags>llm;proxy;tui;observability;debugging</PackageTags>
+    <PackageProjectUrl>https://github.com/alefranz/LlamaFleece</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alefranz/LlamaFleece</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IsPackable>false</IsPackable>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Spectre.Console" Version="0.55.2" />
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+  </ItemGroup>
+
+</Project>

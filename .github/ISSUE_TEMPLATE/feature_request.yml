@@ -1,0 +1,72 @@
+name: Feature request
+description: Suggest an improvement to LlamaFleece
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        LlamaFleece is intentionally a local, TUI-first developer tool. Please describe the problem you are trying to solve and why it fits that scope.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues for the same request.
+          required: true
+        - label: I checked the README and this is not already documented.
+          required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Proxying and forwarding
+        - Streaming parser or projector
+        - TUI rendering or keyboard input
+        - Replay, export, or persistence
+        - Documentation or developer workflow
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What is hard, missing, or confusing today?
+      placeholder: I want to compare multiple replay runs without losing the current interaction view.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the shape of the change you want to see.
+    validations:
+      required: true
+  - type: textarea
+    id: scope_fit
+    attributes:
+      label: Why this fits LlamaFleece
+      description: Explain how this helps the project's local observability or TUI debugging workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing workarounds, competing approaches, or why doing nothing is insufficient.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation or acceptance criteria
+      description: How should someone know this feature is complete?
+      placeholder: The interaction pane should show ..., and `dotnet test` plus `eng/test.ps1` should still pass.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to help implement this.
+          required: false
