@@ -210,6 +210,16 @@ public sealed class ProxyOptions
     {
         ArgumentNullException.ThrowIfNull(persistence);
 
+        if (!string.IsNullOrWhiteSpace(persistence.SessionFilePath))
+        {
+            var trimmedConfiguredPath = persistence.SessionFilePath.Trim();
+            if (trimmedConfiguredPath.EndsWith('\\') || trimmedConfiguredPath.EndsWith('/'))
+            {
+                failures.Add("Proxy:Persistence:SessionFilePath must point to a file.");
+                return;
+            }
+        }
+
         try
         {
             var fullPath = Path.GetFullPath(persistence.GetResolvedSessionFilePath());
@@ -394,11 +404,19 @@ public sealed class ProxyPersistenceOptions
 
     public string? SessionFilePath { get; set; }
 
+    internal static string NormalizeConfiguredPath(string path)
+    {
+        var normalized = path.Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar);
+
+        return Path.TrimEndingDirectorySeparator(normalized);
+    }
+
     internal string GetResolvedSessionFilePath()
     {
         var configuredPath = string.IsNullOrWhiteSpace(SessionFilePath)
             ? Path.Combine(AppContext.BaseDirectory, "state", "session-history.json")
-            : SessionFilePath.Trim();
+            : NormalizeConfiguredPath(SessionFilePath.Trim());
 
         return Path.IsPathRooted(configuredPath)
             ? configuredPath

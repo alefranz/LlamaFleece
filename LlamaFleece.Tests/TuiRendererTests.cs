@@ -1,5 +1,6 @@
 using Spectre.Console;
 using Xunit;
+using Xunit.Sdk;
 
 public class TuiRendererTests
 {
@@ -115,9 +116,9 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains(expected1, rendered, StringComparison.Ordinal);
-        Assert.Contains(expected2, rendered, StringComparison.Ordinal);
-        Assert.Contains(expected3, rendered, StringComparison.Ordinal);
+        AssertRenderedContains(expected1, rendered);
+        AssertRenderedContains(expected2, rendered);
+        AssertRenderedContains(expected3, rendered);
     }
 
     [Fact]
@@ -156,14 +157,14 @@ public class TuiRendererTests
         var normalLayout = CreateLayout();
         renderer.BuildFrame(normalLayout, snapshot);
         var normalRendered = RenderToText(normalLayout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
-        Assert.Contains("Save:", normalRendered, StringComparison.Ordinal);
-        Assert.Contains("visible-save", normalRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Save:", normalRendered);
+        AssertRenderedContains("visible-save", normalRendered);
 
         var fullscreenLayout = CreateLayout();
         renderer.BuildFrame(fullscreenLayout, snapshot with { FullscreenMode = true });
         var fullscreenRendered = RenderToText(fullscreenLayout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
-        Assert.Contains("Save:", fullscreenRendered, StringComparison.Ordinal);
-        Assert.Contains("Enter save", fullscreenRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Save:", fullscreenRendered);
+        AssertRenderedContains("Enter save", fullscreenRendered);
     }
 
     [Fact]
@@ -182,9 +183,9 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains("F/SHIFT+F filter", rendered, StringComparison.Ordinal);
-        Assert.Contains("S save", rendered, StringComparison.Ordinal);
-        Assert.Contains("X fixes", rendered, StringComparison.Ordinal);
+        AssertRenderedContains("F/SHIFT+F filter", rendered);
+        AssertRenderedContains("S save", rendered);
+        AssertRenderedContains("X fixes", rendered);
     }
 
     [Fact]
@@ -207,8 +208,8 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains("Shift+F clears", rendered, StringComparison.Ordinal);
-        Assert.Contains("Press Shift+F to clear", rendered, StringComparison.Ordinal);
+        AssertRenderedContains("Shift+F clears", rendered);
+        AssertRenderedContains("Press Shift+F to clear", rendered);
     }
 
     [Fact]
@@ -237,10 +238,19 @@ public class TuiRendererTests
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
         Assert.Equal(7, layout["Stats"].Size);
-        Assert.Contains(model, rendered, StringComparison.Ordinal);
-        Assert.Contains(endpoint, rendered, StringComparison.Ordinal);
-        Assert.Contains("Fwd: unchanged", rendered, StringComparison.Ordinal);
-        Assert.Contains("TAB pane | L/R select | U/D scroll | PGUP/DN sec | SPC lock", rendered, StringComparison.Ordinal);
+        AssertRenderedContains(model, rendered);
+        AssertRenderedContains(endpoint, rendered);
+        AssertRenderedContains("TAB pane | L/R select | U/D scroll | PGUP/DN sec | SPC lock", rendered);
+    }
+
+    [Fact]
+    public void BuildForwardedRequestDisplayPlain_ReportsUnchangedWhenNoMutationsArePresent()
+    {
+        var visible = new TuiVisibleInteractionSnapshot();
+
+        var display = TuiRenderer.BuildForwardedRequestDisplayPlain(visible);
+
+        Assert.Equal("unchanged", display);
     }
 
     [Fact]
@@ -291,12 +301,12 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains("400 prefill (200.0 t/s)", rendered, StringComparison.Ordinal);
-        Assert.Contains("200 decode (50.0 t/s)", rendered, StringComparison.Ordinal);
-        Assert.Contains("(local)", rendered, StringComparison.Ordinal);
-        Assert.Contains("4 req | 1200 prefill", rendered, StringComparison.Ordinal);
-        Assert.Contains("1800 total, 40 reasoning", rendered, StringComparison.Ordinal);
-        Assert.Contains("active 12.0s", rendered, StringComparison.Ordinal);
+        AssertRenderedContains("400 prefill (200.0 t/s)", rendered);
+        AssertRenderedContains("200 decode (50.0 t/s)", rendered);
+        AssertRenderedContains("(local)", rendered);
+        AssertRenderedContains("4 req | 1200 prefill", rendered);
+        AssertRenderedContains("1800 total, 40 reasoning", rendered);
+        AssertRenderedContains("active 12.0s", rendered);
     }
 
     [Fact]
@@ -350,12 +360,12 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains("512 prefill (256.4 t/s)", rendered, StringComparison.Ordinal);
-        Assert.Contains("256 decode (128.2 t/s)", rendered, StringComparison.Ordinal);
-        Assert.Contains("(API)", rendered, StringComparison.Ordinal);
-        Assert.Contains("8 req | 2400 prefill", rendered, StringComparison.Ordinal);
-        Assert.Contains("avg API total 1.500s/8", rendered, StringComparison.Ordinal);
-        Assert.Contains("prefill: 2.000s", rendered, StringComparison.Ordinal);
+        AssertRenderedContains("512 prefill (256.4 t/s)", rendered);
+        AssertRenderedContains("256 decode (128.2 t/s)", rendered);
+        AssertRenderedContains("(API)", rendered);
+        AssertRenderedContains("8 req | 2400 prefill", rendered);
+        AssertRenderedContains("avg API total 1.500s/8", rendered);
+        AssertRenderedContains("prefill: 2.000s", rendered);
     }
 
     [Fact]
@@ -384,15 +394,15 @@ public class TuiRendererTests
         var normalLayout = CreateLayout();
         renderer.BuildFrame(normalLayout, snapshot);
         var normalRendered = RenderToText(normalLayout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
-        Assert.Contains("Force Continue on Empty Response", normalRendered, StringComparison.Ordinal);
-        Assert.Contains("SPC toggle", normalRendered, StringComparison.Ordinal);
-        Assert.Contains("ENTER apply", normalRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Force Continue on Empty Response", normalRendered);
+        AssertRenderedContains("SPC toggle", normalRendered);
+        AssertRenderedContains("ENTER apply", normalRendered);
 
         var fullscreenLayout = CreateLayout();
         renderer.BuildFrame(fullscreenLayout, snapshot with { FullscreenMode = true });
         var fullscreenRendered = RenderToText(fullscreenLayout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
-        Assert.Contains("Force Continue on Empty Response", fullscreenRendered, StringComparison.Ordinal);
-        Assert.Contains("ESC cancel", fullscreenRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Force Continue on Empty Response", fullscreenRendered);
+        AssertRenderedContains("ESC cancel", fullscreenRendered);
     }
 
     [Fact]
@@ -448,32 +458,32 @@ public class TuiRendererTests
 
         renderer.BuildFrame(layout, filterSnapshot);
         var filterRendered = RenderToText(layout, filterSnapshot.ConsoleWidth, filterSnapshot.ConsoleHeight);
-        Assert.Contains("Filter:", filterRendered, StringComparison.Ordinal);
-        Assert.Contains("status=200", filterRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("capture", filterRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("Force Continue on Empty Response", filterRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Filter:", filterRendered);
+        AssertRenderedContains("status=200", filterRendered);
+        AssertRenderedDoesNotContain("capture", filterRendered);
+        AssertRenderedDoesNotContain("Force Continue on Empty Response", filterRendered);
 
         renderer.BuildFrame(layout, saveFullscreenSnapshot);
         var saveRendered = RenderToText(layout, saveFullscreenSnapshot.ConsoleWidth, saveFullscreenSnapshot.ConsoleHeight);
-        Assert.Contains("Save:", saveRendered, StringComparison.Ordinal);
-        Assert.Contains("capture", saveRendered, StringComparison.Ordinal);
-        Assert.Contains("ESC/ENTER", saveRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("status=200", saveRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("Force Continue on Empty Response", saveRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Save:", saveRendered);
+        AssertRenderedContains("capture", saveRendered);
+        AssertRenderedContains("ESC/ENTER", saveRendered);
+        AssertRenderedDoesNotContain("status=200", saveRendered);
+        AssertRenderedDoesNotContain("Force Continue on Empty Response", saveRendered);
 
         renderer.BuildFrame(layout, fixesSnapshot);
         var fixesRendered = RenderToText(layout, fixesSnapshot.ConsoleWidth, fixesSnapshot.ConsoleHeight);
-        Assert.Contains("Force Continue on Empty Response", fixesRendered, StringComparison.Ordinal);
-        Assert.Contains("SPC toggle", fixesRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("capture", fixesRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("status=200", fixesRendered, StringComparison.Ordinal);
+        AssertRenderedContains("Force Continue on Empty Response", fixesRendered);
+        AssertRenderedContains("SPC toggle", fixesRendered);
+        AssertRenderedDoesNotContain("capture", fixesRendered);
+        AssertRenderedDoesNotContain("status=200", fixesRendered);
 
         renderer.BuildFrame(layout, logSnapshot);
         var logRendered = RenderToText(layout, logSnapshot.ConsoleWidth, logSnapshot.ConsoleHeight);
-        Assert.Contains("live update", logRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("Force Continue on Empty Response", logRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("capture", logRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("status=200", logRendered, StringComparison.Ordinal);
+        AssertRenderedContains("live update", logRendered);
+        AssertRenderedDoesNotContain("Force Continue on Empty Response", logRendered);
+        AssertRenderedDoesNotContain("capture", logRendered);
+        AssertRenderedDoesNotContain("status=200", logRendered);
 
         renderer.BuildFrame(layout, baseSnapshot);
         var restoredRendered = RenderToText(layout, baseSnapshot.ConsoleWidth, baseSnapshot.ConsoleHeight);
@@ -481,10 +491,10 @@ public class TuiRendererTests
         Assert.True(layout["Input"].IsVisible);
         Assert.True(layout["Output"].IsVisible);
         Assert.True(layout["Stats"].IsVisible);
-        Assert.Contains("TAB pane", restoredRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("Force Continue on Empty Response", restoredRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("capture", restoredRendered, StringComparison.Ordinal);
-        Assert.DoesNotContain("status=200", restoredRendered, StringComparison.Ordinal);
+        AssertRenderedContains("TAB pane", restoredRendered);
+        AssertRenderedDoesNotContain("Force Continue on Empty Response", restoredRendered);
+        AssertRenderedDoesNotContain("capture", restoredRendered);
+        AssertRenderedDoesNotContain("status=200", restoredRendered);
     }
 
     [Fact]
@@ -509,8 +519,8 @@ public class TuiRendererTests
 
         var rendered = RenderToText(layout, snapshot.ConsoleWidth, snapshot.ConsoleHeight);
 
-        Assert.Contains("[10:31:24.534] LlamaFleece Proxy started on port 5000.", rendered, StringComparison.Ordinal);
-        Assert.Contains("[10:31:24.552] Proxying to http://localhost:8123 [source=abc].", rendered, StringComparison.Ordinal);
+        AssertRenderedContains("[10:31:24.534] LlamaFleece Proxy started on port 5000.", rendered);
+        AssertRenderedContains("[10:31:24.552] Proxying to http://localhost:8123 [source=abc].", rendered);
     }
 
     [Theory]
@@ -557,5 +567,26 @@ public class TuiRendererTests
         console.Write(layout);
 
         return writer.ToString();
+    }
+
+    private static void AssertRenderedContains(string expected, string rendered)
+    {
+        if (!rendered.Contains(expected, StringComparison.Ordinal))
+        {
+            throw new XunitException($"Expected rendered UI to contain '{expected}', but it did not.{Environment.NewLine}{Environment.NewLine}{FormatRenderedUi(rendered)}");
+        }
+    }
+
+    private static void AssertRenderedDoesNotContain(string unexpected, string rendered)
+    {
+        if (rendered.Contains(unexpected, StringComparison.Ordinal))
+        {
+            throw new XunitException($"Expected rendered UI to not contain '{unexpected}', but it did.{Environment.NewLine}{Environment.NewLine}{FormatRenderedUi(rendered)}");
+        }
+    }
+
+    private static string FormatRenderedUi(string rendered)
+    {
+        return $"Rendered UI:{Environment.NewLine}---{Environment.NewLine}{rendered}{Environment.NewLine}---";
     }
 }

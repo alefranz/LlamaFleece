@@ -85,8 +85,11 @@ public class InteractionExportServiceTests
         Assert.DoesNotContain("Raw Request", markdown, StringComparison.Ordinal);
         Assert.DoesNotContain("Raw Response", markdown, StringComparison.Ordinal);
 
-        Assert.Equal("{\"model\":\"gpt-test\"}", File.ReadAllText(result.RawRequestPath));
-        Assert.Equal("data: final answer", File.ReadAllText(result.RawResponsePath));
+        var rawRequestPath = Assert.IsType<string>(result.RawRequestPath);
+        var rawResponsePath = Assert.IsType<string>(result.RawResponsePath);
+
+        Assert.Equal("{\"model\":\"gpt-test\"}", File.ReadAllText(rawRequestPath));
+        Assert.Equal("data: final answer", File.ReadAllText(rawResponsePath));
     }
 
     [Fact]
@@ -232,12 +235,15 @@ public class InteractionExportServiceTests
         Assert.Contains(InteractionSecretRedactor.RedactionToken, markdown, StringComparison.Ordinal);
         Assert.Contains("Bearer REDACTED", markdown, StringComparison.Ordinal);
 
+        var rawRequestPath = Assert.IsType<string>(result.RawRequestPath);
+        var rawResponsePath = Assert.IsType<string>(result.RawResponsePath);
+
         Assert.Equal(
             "{\"authorization\":\"REDACTED\",\"tool\":{\"api_key\":\"REDACTED\"}}",
-            File.ReadAllText(result.RawRequestPath));
+            File.ReadAllText(rawRequestPath));
         Assert.Equal(
             "data: {\"choices\":[{\"delta\":{\"content\":\"Response token REDACTED\"}}]}",
-            File.ReadAllText(result.RawResponsePath));
+            File.ReadAllText(rawResponsePath));
     }
 
     [Fact]

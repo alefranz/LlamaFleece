@@ -7,6 +7,7 @@ using Spectre.Console;
 internal sealed class InteractionExportService
 {
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+    private static readonly char[] PortableInvalidFileNameCharacters = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -374,14 +375,13 @@ internal sealed class InteractionExportService
         candidate = candidate.Replace(Path.DirectorySeparatorChar, '-')
                              .Replace(Path.AltDirectorySeparatorChar, '-');
 
-        var invalidCharacters = Path.GetInvalidFileNameChars();
         var builder = new StringBuilder(candidate.Length);
         var previousSeparator = false;
 
         foreach (var character in candidate)
         {
             var normalizedCharacter = character;
-            if (Array.IndexOf(invalidCharacters, normalizedCharacter) >= 0 || char.IsControl(normalizedCharacter))
+            if (Array.IndexOf(PortableInvalidFileNameCharacters, normalizedCharacter) >= 0 || char.IsControl(normalizedCharacter))
             {
                 normalizedCharacter = '-';
             }
@@ -412,7 +412,7 @@ internal sealed class InteractionExportService
             throw new InvalidOperationException("Enter a file name with letters or numbers.");
         }
 
-        if (OperatingSystem.IsWindows() && IsReservedWindowsFileName(sanitized))
+        if (IsReservedWindowsFileName(sanitized))
         {
             sanitized += "-file";
         }

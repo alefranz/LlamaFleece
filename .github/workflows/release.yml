@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   validate-tag:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -45,13 +45,13 @@ jobs:
           }
 
       - name: Restore test project dependencies
-        run: dotnet restore .\LlamaFleece.Tests\LlamaFleece.Tests.csproj
+        run: dotnet restore ./LlamaFleece.Tests/LlamaFleece.Tests.csproj
 
       - name: Build app in Release
-        run: dotnet build .\LlamaFleece\LlamaFleece.csproj --configuration Release --no-restore
+        run: dotnet build ./LlamaFleece/LlamaFleece.csproj --configuration Release --no-restore
 
       - name: Run full test suite in Release
-        run: dotnet test .\LlamaFleece.Tests\LlamaFleece.Tests.csproj --configuration Release --no-restore
+        run: dotnet test ./LlamaFleece.Tests/LlamaFleece.Tests.csproj --configuration Release --no-restore
 
   build-release-artifacts:
     needs: validate-tag
@@ -70,11 +70,7 @@ jobs:
             rid: linux-x64
             asset_suffix: linux-x64
             archive_extension: tar.gz
-          - os: macos-13
-            rid: osx-x64
-            asset_suffix: macos-x64
-            archive_extension: tar.gz
-          - os: macos-14
+          - os: macos-latest
             rid: osx-arm64
             asset_suffix: macos-arm64
             archive_extension: tar.gz

@@ -391,7 +391,15 @@ internal sealed class TuiRenderer
 
     private static IReadOnlyList<string> BuildNormalStatsSummaryLines(TuiSnapshot snapshot)
     {
-        return BuildStatsSummaryLines(snapshot, TuiLayoutMetrics.GetNormalStatsSummaryLineCount(snapshot.ConsoleWidth));
+        var summaryLineCount = TuiLayoutMetrics.GetNormalStatsSummaryLineCount(snapshot.ConsoleWidth);
+        var lines = BuildStatsSummaryLines(snapshot, summaryLineCount).ToArray();
+
+        if (summaryLineCount >= 4)
+        {
+            lines[0] = BuildCompactNormalMetadataLine(snapshot);
+        }
+
+        return lines;
     }
 
     private static IReadOnlyList<string> BuildStatsSummaryLines(TuiSnapshot snapshot, int summaryLineCount)
@@ -560,7 +568,7 @@ internal sealed class TuiRenderer
         var finish = TruncatePlainText(finishValue, fieldWidths.Finish);
         var forwarded = TruncatePlainText(forwardedValue, fieldWidths.Forwarded);
 
-        var line = $"[bold gray]Model:[/] {Markup.Escape(model)} | [bold gray]Endpoint:[/] {Markup.Escape(endpoint)} | [bold gray]Status:[/] {status} | [bold gray]Finish:[/] {Markup.Escape(finish)} | [bold gray]Fwd:[/] {Markup.Escape(forwarded)}";
+        var line = $"[bold gray]Model:[/] {Markup.Escape(model)} | [bold gray]Endpoint:[/] {Markup.Escape(endpoint)} | [bold gray]Status:[/] {status} | [bold gray]Fwd:[/] {Markup.Escape(forwarded)} | [bold gray]Finish:[/] {Markup.Escape(finish)}";
         if (diagnosticsValue is not null)
         {
             var diagnostics = TruncatePlainText(diagnosticsValue, fieldWidths.Diagnostics);
@@ -662,7 +670,7 @@ internal sealed class TuiRenderer
         return "n/a";
     }
 
-    private static string BuildForwardedRequestDisplayPlain(TuiVisibleInteractionSnapshot visible)
+    internal static string BuildForwardedRequestDisplayPlain(TuiVisibleInteractionSnapshot visible)
     {
         var mutationCount = visible.ForwardedRequestMutations.Count;
         if (mutationCount == 0 && !visible.ForceContinueApplied)
@@ -922,9 +930,17 @@ internal sealed class TuiRenderer
             metadataLine += $" | [bold gray]Diag:[/] {BuildDiagnosticDisplay(visible)}";
         }
 
+        var currentLine = $"[bold gray]Current:[/]";
+        if (visible is not null)
+        {
+            currentLine += $" [bold gray]Fwd:[/] {forwardedDisplay} |";
+        }
+
+        currentLine += $" Tokens: {currentTokensDisplay}";
+
         return new StatsTextLines(
             MetadataLine: metadataLine,
-            CurrentLine: $"[bold gray]Current:[/] Tokens: {currentTokensDisplay}",
+            CurrentLine: currentLine,
             SessionLine: sessionLine,
             LatencyLine: latencyLine,
             FilterLine: filterLine,
