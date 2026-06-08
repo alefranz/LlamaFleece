@@ -51,7 +51,6 @@ Published GitHub Releases include self-contained archives for:
 
 - Windows x64
 - Linux x64
-- macOS x64
 - macOS arm64
 
 Those builds do not require the .NET SDK on the target machine.
